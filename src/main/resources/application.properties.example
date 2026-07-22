@@ -1,0 +1,46 @@
+spring.application.name=keaa-admin-api
+server.port=8080
+
+spring.datasource.url=jdbc:mysql://localhost:3306/keaa_admin?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+spring.datasource.username=root
+spring.datasource.password=CHANGE_ME
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.open-in-view=false
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+
+# Downloads / Certificates: uploaded files are written under this directory (relative to the
+# server's working directory). Catalogues and certificates can be a few MB, so lift the
+# default 1 MB multipart cap.
+app.upload.dir=uploads
+spring.servlet.multipart.max-file-size=25MB
+spring.servlet.multipart.max-request-size=26MB
+
+# =====================================================================
+#  JWT — dev secret. In production this MUST come from an env var,
+#  not from this file. (Base64, >=32 bytes for HS256.)
+# =====================================================================
+app.jwt.secret=CHANGE_ME
+app.jwt.expiration-days=7
+app.jwt.cookie-name=keaa_token
+
+cloudinary.cloud-name=keaa-assets
+cloudinary.api-key=CHANGE_ME
+cloudinary.api-secret=CHANGE_ME
+# Where admin-uploaded assets land in the Cloudinary Media Library (must be the FULL nested path,
+# else Cloudinary creates a separate top-level folder of the same leaf name).
+cloudinary.products-folder=1.Keaa Assets/Keaa products
+cloudinary.gallery-folder=1.Keaa Assets/Keaa Gallery
+
+
+
+# The React admin/site runs here in dev; CORS must allow it WITH credentials (so the
+# httpOnly cookie is sent). Comma-separated, and each entry may use a port wildcard because
+# SecurityConfig registers these with setAllowedOriginPatterns. This covers both hostnames
+# (localhost AND 127.0.0.1 — a browser on one is a DIFFERENT origin from the other) on any
+# local port, so the Vite dev server (5173) and a production preview (4173, etc.) both work.
+# IN PRODUCTION replace this with the exact deployed origin, e.g.
+#   app.cors.allowed-origins=https://admin.keaa-international.net
+app.cors.allowed-origins=http://localhost:*,http://127.0.0.1:*
