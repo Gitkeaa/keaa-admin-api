@@ -31,12 +31,13 @@ public class Sop {
     @Column(nullable = false, length = 120)
     private String title;
 
+    /** The owning function: Administration, Business Development, HR, Website, General. Drives the
+     *  SOP manager's department filter and a chip in the help drawer header. */
+    @Column(length = 48)
+    private String department;
+
     @Column(columnDefinition = "TEXT")
     private String purpose;
-
-    @Convert(converter = StringListConverter.class)
-    @Column(columnDefinition = "TEXT")
-    private List<String> checklist;
 
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
@@ -44,7 +45,36 @@ public class Sop {
 
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
+    private List<String> responsibilities;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> checklist;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> bestPractices;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
     private List<String> important;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> quickTips;
+
+    /** Related module keys, rendered as jump-to chips at the foot of the guide. */
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private List<String> related;
+
+    /** Display name of whoever last published this guide. */
+    private String updatedBy;
+
+    /** Bumps on every publish; 1 for a freshly seeded guide. Column renamed to avoid the MySQL
+     *  reserved word VERSION; the JSON field stays "version". */
+    @Column(name = "doc_version")
+    private Integer version;
 
     @Column(updatable = false)
     private Instant createdAt;
@@ -55,6 +85,7 @@ public class Sop {
         Instant now = Instant.now();
         if (createdAt == null) createdAt = now;
         updatedAt = now;
+        if (version == null) version = 1;
     }
 
     @PreUpdate

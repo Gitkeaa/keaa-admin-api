@@ -121,7 +121,15 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public ResponseEntity<?> logout(Authentication authentication, HttpServletRequest request,
+                                    HttpServletResponse response) {
+        // Record the sign-out on the user's activity timeline before clearing the cookie. The
+        // session is still valid at this point (JwtAuthFilter ran first), so Authentication is
+        // present; best-effort, so a missing user never blocks the logout itself.
+        if (authentication != null) {
+            userRepository.findByEmail(authentication.getName())
+                    .ifPresent(u -> activityService.record(u.getId(), "LOGOUT", "Signed out", request));
+        }
         response.addHeader(HttpHeaders.SET_COOKIE, buildCookie("", Duration.ZERO).toString());
         return ResponseEntity.ok().build();
     }
