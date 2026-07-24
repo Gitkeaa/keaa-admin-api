@@ -47,7 +47,8 @@ public class SecurityConfig {
                         // Public site forms submit these without logging in; reading and
                         // updating them still requires an authenticated admin. Listed BEFORE the
                         // role rules below so the public POST wins over "/api/<x>/**".
-                        .requestMatchers(HttpMethod.POST, "/api/rfq", "/api/contact", "/api/careers").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/rfq", "/api/contact", "/api/careers",
+                                "/api/catalogue-requests", "/api/feedback").permitAll()
 
                         // ---- Role-based access. Mirror of ADMIN_NAV in the frontend roles.js;
                         //      keep the two in step. hasRole("X") matches the "ROLE_X" authority
@@ -72,6 +73,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/videos/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
                         .requestMatchers("/api/videos/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN")
 
+                        // Downloads / Certificates: every signed-in staff member may LIST the files and
+                        // download one, because the dashboard's Resource Library offers them to the whole
+                        // team (HR and Employee included). Uploading and deleting stays with the content
+                        // roles. Same shape as the SOP rule below: GET is authenticated, writes are not.
+                        .requestMatchers(HttpMethod.GET, "/api/downloads/**").authenticated()
                         .requestMatchers("/api/downloads/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
                         .requestMatchers("/api/translations/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
 
@@ -80,6 +86,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/inquiries/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
                         .requestMatchers("/api/rfq/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
                         .requestMatchers("/api/contact/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
+                        // Site feedback. NOT part of the lead pipeline above (see the note on the
+                        // Feedback entity) — it just happens to be read by the same desks. Mirrors the
+                        // `feedback` module in the frontend roles.js.
+                        .requestMatchers("/api/feedback/**").hasAnyRole("SUPER_ADMIN", "SENIOR_ADMIN", "ADMIN", "BUSINESS_DEVELOPMENT")
                         // Recruitment. Everyone here may VIEW applications, but only HR may change an
                         // application's status — the admin tiers are view-only for recruitment.
                         .requestMatchers(HttpMethod.PATCH, "/api/careers/**").hasRole("HR")

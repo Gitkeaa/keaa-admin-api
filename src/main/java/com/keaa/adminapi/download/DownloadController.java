@@ -22,9 +22,13 @@ import java.util.UUID;
  *
  * Files are written to {app.upload.dir}/downloads on the server's own disk (the storage
  * choice for this build), under a random name so two uploads with the same original file
- * name never collide. Metadata lives in the DB. Access (SUPER_ADMIN / ADMIN / MARKETING) is
- * enforced in SecurityConfig; the file-serving GET sits under the same path, so a download
- * link carries the admin cookie (a top-level GET, allowed by SameSite=Lax).
+ * name never collide. Metadata lives in the DB.
+ *
+ * Access is enforced in SecurityConfig: any signed-in staff member may list the files and
+ * download one (the dashboard's Resource Library shows them to the whole team), while upload
+ * and delete stay with SUPER_ADMIN / SENIOR_ADMIN / ADMIN / BUSINESS_DEVELOPMENT. The
+ * file-serving GET sits under the same path, so a download link carries the admin cookie
+ * (a top-level GET, allowed by SameSite=Lax).
  */
 @RestController
 @RequestMapping("/api/downloads")

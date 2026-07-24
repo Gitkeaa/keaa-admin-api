@@ -6,12 +6,12 @@ import lombok.*;
 import java.time.Instant;
 
 /**
- * A unified customer inquiry — the ONE record every RFQ, export inquiry and Contact-Us
- * message becomes, so the whole team runs the same pipeline and assignment logic no matter
- * where the lead came in.
+ * A unified customer inquiry — the ONE record every RFQ, export inquiry, Contact-Us message
+ * and catalogue download becomes, so the whole team runs the same pipeline and assignment
+ * logic no matter where the lead came in.
  *
- * `type` (RFQ | EXPORT | CONTACT) keeps the three streams distinguishable for the existing
- * screens, while `status` drives the shared sales workflow:
+ * `type` (RFQ | EXPORT | CONTACT | CATALOGUE) keeps the streams distinguishable for the
+ * existing screens, while `status` drives the shared sales workflow:
  *   NEW → CONTACTED → QUOTATION_SENT → FOLLOW_UP → NEGOTIATION → WON / LOST → CLOSED
  *
  * On creation the inquiry is auto-assigned to the Sales/Marketing member whose territory
@@ -31,7 +31,7 @@ public class Inquiry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** RFQ | EXPORT | CONTACT */
+    /** RFQ | EXPORT | CONTACT | CATALOGUE */
     @Column(nullable = false, length = 16)
     private String type;
 
