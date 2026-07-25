@@ -6,6 +6,7 @@ import com.keaa.adminapi.security.JwtService;
 import com.keaa.adminapi.user.User;
 import com.keaa.adminapi.user.UserRepository;
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -48,6 +49,33 @@ public class AuthController {
     private String cookieName;
     @Value("${app.jwt.expiration-days}")
     private long expirationDays;
+
+    /**
+     * Cookie flags are per-environment, so they are configuration rather than constants.
+     * The defaults here are the DEV pair (plain http on localhost); production overrides both
+     * in its own application.properties. See buildCookie for why the two are coupled.
+     */
+    @Value("${app.jwt.cookie-secure:false}")
+    private boolean cookieSecure;
+    @Value("${app.jwt.cookie-same-site:Lax}")
+    private String cookieSameSite;
+
+    /**
+     * Fails startup on the one combination every browser silently discards: SameSite=None
+     * without Secure. Left to run, the API would look healthy — login returns 200 and sets the
+     * header — while the browser drops the cookie, so every later request is anonymous and the
+     * admin console appears to "log in and immediately log out". That is expensive to diagnose
+     * from the frontend, so it is refused here instead.
+     */
+    @PostConstruct
+    void validateCookieConfig() {
+        if ("None".equalsIgnoreCase(cookieSameSite) && !cookieSecure) {
+            throw new IllegalStateException(
+                    "app.jwt.cookie-same-site=None requires app.jwt.cookie-secure=true — browsers "
+                            + "reject SameSite=None cookies sent over a non-Secure connection. Serve the "
+                            + "API over HTTPS and set cookie-secure=true, or use SameSite=Lax.");
+        }
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req, HttpServletRequest request,
@@ -162,12 +190,28 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * The session cookie. `secure` and `sameSite` are configuration because the correct pair
+     * depends on where the frontend is served from relative to this API, and the two choices
+     * are not independent:
+     *
+     *   SAME SITE (admin served from this API's own domain, or a subdomain of it)
+     *     Lax + Secure=true over HTTPS. Lax is the stricter option and is enough here.
+     *
+     *   CROSS SITE (admin on its own domain — Vercel/Netlify/a separate host — talking to this
+     *   API elsewhere) None + Secure=true. Lax would NOT be sent on the admin's
+     *   fetch(credentials:'include') calls, because a cross-site XHR is not a top-level
+     *   navigation; login would succeed and every request after it would be anonymous.
+     *
+     * SameSite=None is meaningless without Secure — browsers discard such cookies outright —
+     * which is why validateCookieConfig refuses that combination at startup.
+     */
     private ResponseCookie buildCookie(String value, Duration maxAge) {
         return ResponseCookie.from(cookieName, value)
                 .httpOnly(true)
-                .secure(false)   // dev over http; set true behind https in production
+                .secure(cookieSecure)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .maxAge(maxAge)
                 .build();
     }

@@ -26,6 +26,50 @@ app.jwt.secret=CHANGE_ME
 app.jwt.expiration-days=7
 app.jwt.cookie-name=keaa_token
 
+# Session-cookie flags. THE VALUES BELOW ARE DEV ONLY (plain http on localhost).
+#
+# In production, pick the pair that matches where the admin frontend is served from:
+#
+#   Admin on this API's own domain, or a subdomain of it:
+#     app.jwt.cookie-secure=true
+#     app.jwt.cookie-same-site=Lax
+#
+#   Admin on a SEPARATE domain (Vercel/Netlify/another host) calling this API:
+#     app.jwt.cookie-secure=true
+#     app.jwt.cookie-same-site=None
+#     ...because Lax is NOT sent on a cross-site fetch(credentials:'include'), so login would
+#     succeed and every request after it would come back 401.
+#
+# Secure=true requires HTTPS, and SameSite=None requires Secure. That combination is checked at
+# startup (AuthController.validateCookieConfig) and refused, rather than left to fail silently
+# in the browser. Whichever pair you choose, the admin's origin must ALSO be listed in
+# app.cors.allowed-origins at the bottom of this file.
+app.jwt.cookie-secure=false
+app.jwt.cookie-same-site=Lax
+
+# =====================================================================
+#  Outbound email — catalogue-download lead notifications.
+#
+#  OFF until spring.mail.host is set: with no host Spring creates no JavaMailSender, so
+#  LeadMailer logs "not configured" and skips the send. The lead is still stored and still
+#  appears in the console, so nothing is lost while these stay blank.
+#
+#  To switch it on, add the block below (env vars in production — never put real credentials
+#  in this file). Gmail / Workspace needs an App Password, not the account password.
+#
+#    spring.mail.host=smtp.gmail.com
+#    spring.mail.port=587
+#    spring.mail.username=${MAIL_USERNAME}
+#    spring.mail.password=${MAIL_PASSWORD}
+#    spring.mail.properties.mail.smtp.auth=true
+#    spring.mail.properties.mail.smtp.starttls.enable=true
+#
+#  app.mail.notify  who receives the alert (comma-separated for several)
+#  app.mail.from    envelope sender; most providers require it to match the mailbox above
+# =====================================================================
+app.mail.notify=
+app.mail.from=
+
 cloudinary.cloud-name=keaa-assets
 cloudinary.api-key=CHANGE_ME
 cloudinary.api-secret=CHANGE_ME
@@ -33,6 +77,8 @@ cloudinary.api-secret=CHANGE_ME
 # else Cloudinary creates a separate top-level folder of the same leaf name).
 cloudinary.products-folder=1.Keaa Assets/Keaa products
 cloudinary.gallery-folder=1.Keaa Assets/Keaa Gallery
+# Applicant CVs (raw files: PDF/doc) uploaded on the public careers form land here.
+cloudinary.resume-folder=1.Keaa Assets/Keaa Resumes
 
 
 
