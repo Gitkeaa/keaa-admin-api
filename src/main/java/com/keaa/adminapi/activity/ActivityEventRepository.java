@@ -9,3 +9,4 @@ public interface ActivityEventRepository extends JpaRepository<ActivityEvent, Lo
     List<ActivityEvent> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     List<ActivityEvent> findByUserIdAndTypeOrderByCreatedAtDesc(Long userId, String type, Pageable pageable);
 }
+  
