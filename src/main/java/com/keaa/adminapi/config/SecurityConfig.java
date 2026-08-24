@@ -48,7 +48,7 @@ public class SecurityConfig {
                         // updating them still requires an authenticated admin. Listed BEFORE the
                         // role rules below so the public POST wins over "/api/<x>/**".
                         .requestMatchers(HttpMethod.POST, "/api/rfq", "/api/contact", "/api/careers",
-                                "/api/catalogue-requests", "/api/feedback").permitAll()
+                                "/api/catalogue-requests", "/api/feedback", "/api/chat").permitAll()
 
                         // ---- Role-based access. Mirror of ADMIN_NAV in the frontend roles.js;
                         //      keep the two in step. hasRole("X") matches the "ROLE_X" authority

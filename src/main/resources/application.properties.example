@@ -90,3 +90,18 @@ cloudinary.resume-folder=1.Keaa Assets/Keaa Resumes
 # IN PRODUCTION replace this with the exact deployed origin, e.g.
 #   app.cors.allowed-origins=https://admin.keaa-international.net
 app.cors.allowed-origins=http://localhost:*,http://127.0.0.1:*
+
+# =====================================================================
+#  AI CHAT WIDGET (/api/chat)
+#
+#  The Anthropic key must come from the ENVIRONMENT, never from this file — it is a
+#  billable credential. Set ANTHROPIC_API_KEY on the server before starting:
+#      export ANTHROPIC_API_KEY=sk-ant-...
+#  Without it the widget still answers, but offline from the site's own data only.
+#
+#  The knowledge base is src/main/resources/knowledge-base-data.json, exported from the
+#  frontend repo. When site content changes, re-export it and restart:
+#      npm run export:chat-kb <path-to>/src/main/resources/knowledge-base-data.json
+# =====================================================================
+app.chat.api-key=${ANTHROPIC_API_KEY:}
+app.chat.model=${ANTHROPIC_MODEL:claude-haiku-4-5}
