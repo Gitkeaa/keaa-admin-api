@@ -42,6 +42,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Liveness for Railway's healthcheck and for anyone diagnosing an outage.
+                        // Only status UP/DOWN is exposed (show-details=never in application.properties).
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                         // Uploaded avatars/files are public (referenced from <img> tags).
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         // Public site forms submit these without logging in; reading and

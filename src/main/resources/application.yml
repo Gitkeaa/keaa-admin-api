@@ -1,0 +1,56 @@
+# =====================================================================
+#  Operational defaults that ship INSIDE the jar — the same on a laptop and on Railway.
+#
+#  application.properties is gitignored because it carries secrets, so it never reaches the
+#  Railway build: production runs on environment variables alone. Anything that must hold in
+#  production but is not a secret therefore lives HERE, in a tracked file. Spring loads this
+#  file next to application.properties; a key set in both is taken from .properties, and an
+#  environment variable (e.g. SPRING_DATASOURCE_HIKARI_MAX_LIFETIME) overrides both.
+# =====================================================================
+
+server:
+  # Finish in-flight requests (up to 20s) before the process exits on a redeploy or restart,
+  # instead of cutting them off mid-response. Railway SIGTERMs the old deployment after cutover.
+  shutdown: graceful
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+  datasource:
+    hikari:
+      # Tuned so an idle API never hands out a dead connection.
+      #
+      # Why: on Railway the app reaches MySQL through a proxy that quietly drops TCP
+      # connections that sit idle. Hikari's defaults (max-lifetime 30 min, no keepalive) let
+      # such a connection stay in the pool; the next login then failed with "Communications
+      # link failure" -> HTTP 500 -> the portal said "Could not reach the server" although the
+      # server was up. The retry worked, which is exactly the "sometimes" pattern reported.
+      #
+      # keepalive-time pings each idle connection every 2 minutes so the proxy never sees it
+      # as idle; max-lifetime recycles every connection after 10 minutes regardless (Hikari
+      # requires it to exceed keepalive-time and idle-timeout); connection-timeout caps how
+      # long a request waits for a connection so a stuck database fails fast (-> 503 via
+      # ApiExceptionHandler) instead of hanging until the browser gives up.
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+      validation-timeout: 5000
+      idle-timeout: 300000
+      keepalive-time: 120000
+      max-lifetime: 600000
+
+management:
+  # /actuator/health for Railway's deploy healthcheck (railway.json) and for diagnosing an
+  # outage by hand:   curl https://<api-host>/actuator/health   ->  {"status":"UP"}
+  # Only /health is exposed, and only its overall status: no component details, no other
+  # actuators. It is permitted without a session in SecurityConfig.
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

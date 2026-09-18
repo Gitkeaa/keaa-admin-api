@@ -6,6 +6,11 @@ spring.datasource.username=root
 spring.datasource.password=CHANGE_ME
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
+# Connection-pool keepalive, graceful shutdown and the /actuator/health endpoint are NOT set
+# here: this file is gitignored and never reaches Railway. They live in application.yml,
+# which is tracked and ships inside the jar. Override any of them per environment with an
+# env var (e.g. SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=600000).
+
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.open-in-view=false
 spring.jpa.show-sql=false

@@ -20,6 +20,10 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -84,6 +88,20 @@ public class AuthController {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.email(), req.password()));
         } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(new ErrorResponse("Invalid email or password."));
+        } catch (DisabledException | LockedException e) {
+            // A deactivated user used to fall through here as an uncaught exception -> HTTP 500,
+            // which the portal reported as "Could not reach the server". It is a credentials
+            // problem, so it is a 401 with a message that says what to do about it.
+            return ResponseEntity.status(401).body(new ErrorResponse(
+                    "This account is deactivated. Ask an administrator to re-activate it."));
+        } catch (InternalAuthenticationServiceException e) {
+            // Thrown when loading the user itself failed — in practice the database was not
+            // reachable (Railway MySQL restart, dropped pool connection). 503 tells the client
+            // "try again shortly" rather than the misleading "backend not running".
+            return ResponseEntity.status(503).body(new ErrorResponse(
+                    "The database is temporarily unavailable. Please try again in a moment."));
+        } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(new ErrorResponse("Invalid email or password."));
         }
 
