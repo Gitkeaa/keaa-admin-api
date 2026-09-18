@@ -41,10 +41,18 @@ spring:
       max-lifetime: 600000
 
 management:
-  # /actuator/health for Railway's deploy healthcheck (railway.json) and for diagnosing an
-  # outage by hand:   curl https://<api-host>/actuator/health   ->  {"status":"UP"}
+  # /actuator/health for diagnosing an outage by hand:
+  #     curl https://<api-host>/actuator/health   ->  {"status":"UP"}   (DB included)
+  # Railway's deploy gate (railway.json) uses /actuator/health/liveness instead: "the JVM is
+  # up and serving", nothing external. Gating on the database too would let a momentary MySQL
+  # blip mark a good build as failed and pin the previous deployment in place.
   # Only /health is exposed, and only its overall status: no component details, no other
   # actuators. It is permitted without a session in SecurityConfig.
+  health:
+    # No SMTP probe in health: mail is optional here and an unreachable SMTP host must not
+    # report the whole API as DOWN.
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
