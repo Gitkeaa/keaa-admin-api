@@ -14,7 +14,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -40,6 +42,14 @@ public class SecurityConfig {
                 .cors(withDefaults()) // uses the CorsConfigurationSource bean below
                 .csrf(AbstractHttpConfigurer::disable) // stateless JWT API, no CSRF token
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // No session -> 401, not 403. Spring's default entry point for an API with neither
+                // form login nor HTTP Basic answers an anonymous request with 403, the same status it
+                // uses for "signed in but wrong role". The console could not tell the two apart, so a
+                // lost or blocked session cookie showed up as "Request failed (403)" on every panel
+                // instead of sending the person back to the login screen. 401 now means "you are not
+                // signed in" (the frontend reacts by ending the session) and 403 keeps meaning "this
+                // role may not do that".
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         // Liveness for Railway's healthcheck and for anyone diagnosing an outage.
