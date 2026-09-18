@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.DispatcherType;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -51,6 +52,12 @@ public class SecurityConfig {
                 // role may not do that".
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
+                        // The container re-dispatches every error (a 404 for a missing /uploads file,
+                        // a 500) to /error, and that second pass is a request too. Left to anyRequest()
+                        // below it was refused for anonymous callers, so a missing file answered 403
+                        // instead of 404 and every error page needed a login. Permit the dispatch, not
+                        // the path: the original request was already authorised on its first pass.
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Liveness for Railway's healthcheck and for anyone diagnosing an outage.
                         // Only status UP/DOWN is exposed (show-details=never in application.properties).
